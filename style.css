@@ -1,0 +1,33 @@
+img {
+  width: 25px;
+  height: 25px;
+}
+
+img.small-object {
+  width: 20px;
+  height: 20px;
+}
+
+img.time {
+  width: 15px;
+  height: 15px;
+  position: relative;
+  top: -2px;
+}
+
+.small-col {
+  width: 0;
+  white-space: nowrap;
+}
+
+.object-row th[scope="row"] {
+  text-align: left;
+}
+
+textarea {
+  resize: none;
+}
+
+#score-table thead th {
+  white-space: nowrap;
+}

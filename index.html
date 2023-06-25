@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <!-- Meta tags for Bootstrap -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ"
+      crossorigin="anonymous"
+    />
+
+    <!-- Bootstrap icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+
+    <title>Planet X Searching</title>
+  </head>
+
+  <body>
+    <div class="p-3">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="/">Home</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            Planet X Searching
+          </li>
+        </ol>
+      </nav>
+
+      <div class="mb-2">
+        <span class="h1">Planet X Searching</span>
+        <span class="h6 fst-italic text-black text-opacity-50 ms-1">
+          (<a href="changelog.html" class="text-reset">v0.1</a>)
+        </span>
+      </div>
+
+      <div id="game-settings" class="container-fluid px-0 mb-3">
+        <div class="row mb-2">
+          <div class="col-1 col-form-label">Choose Mode:</div>
+          <div id="game-mode-group" class="col-auto"></div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-1 col-form-label">Players:</div>
+          <div class="col-auto btn-group" role="group">
+            <input
+              type="radio"
+              id="players-2"
+              name="num-players"
+              class="btn-check"
+              value="2"
+              autocomplete="off"
+            />
+            <label for="players-2" class="btn btn-outline-secondary">2</label>
+            <input
+              type="radio"
+              id="players-3"
+              name="num-players"
+              class="btn-check"
+              value="3"
+              autocomplete="off"
+            />
+            <label for="players-3" class="btn btn-outline-secondary">3</label>
+            <input
+              type="radio"
+              id="players-4"
+              name="num-players"
+              class="btn-check"
+              value="4"
+              autocomplete="off"
+            />
+            <label for="players-4" class="btn btn-outline-secondary">4</label>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-1 col-form-label">Difficulty:</div>
+          <div id="difficulty-group" class="col-auto"></div>
+          <div
+            id="difficulty-group2"
+            class="col-auto btn-group"
+            role="group"
+          ></div>
+        </div>
+        <div class="row">
+          <div class="col-auto">
+            <button
+              type="button"
+              id="start-game-btn"
+              class="btn btn-success"
+              disabled
+            >
+              Start Game
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="reset-buttons" class="mb-3 d-none">
+        <button type="button" id="new-game-btn" class="btn btn-success">
+          New Game
+        </button>
+        <button type="button" id="reset-btn" class="btn btn-danger">
+          Reset
+        </button>
+      </div>
+
+      <div id="board" class="container-fluid px-0 d-none">
+        <div class="row mb-2">
+          <div class="col">
+            <div class="table-responsive">
+              <table
+                id="hints-table"
+                class="table table-bordered table-hover align-middle text-center"
+              >
+                <thead>
+                  <tr id="sectors-head">
+                    <td></td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr id="opposite-row">
+                    <td>Opposite Sector</td>
+                  </tr>
+                  <tr class="object-row" object="planet-x">
+                    <th scope="row" class="small-col">
+                      <img src="images/planet-x.png" alt="Planet X" />
+                      Planet X
+                    </th>
+                  </tr>
+                  <tr class="object-row" object="truly-empty">
+                    <th scope="row" class="small-col">
+                      <img src="images/truly-empty.png" alt="Truly Empty" />
+                      Truly Empty
+                    </th>
+                  </tr>
+                  <tr class="object-row" object="gas-cloud">
+                    <th scope="row" class="small-col">
+                      <img src="images/gas-cloud.png" alt="Gas Cloud" />
+                      Gas Cloud
+                    </th>
+                  </tr>
+                  <tr class="object-row" object="dwarf-planet">
+                    <th scope="row" class="small-col">
+                      <img src="images/dwarf-planet.png" alt="Dwarf Planet" />
+                      Dwarf Planet
+                    </th>
+                  </tr>
+                  <tr class="object-row" object="asteroid">
+                    <th scope="row" class="small-col">
+                      <img src="images/asteroid.png" alt="Asteroid" />
+                      Asteroid
+                    </th>
+                  </tr>
+                  <tr class="object-row" object="comet">
+                    <th scope="row" class="small-col">
+                      <img src="images/comet.png" alt="Comet" />
+                      Comet
+                    </th>
+                  </tr>
+                  <tr class="object-row" notes="true">
+                    <th scope="row">Notes</th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <div class="col-lg-6 order-lg-2">
+            <div id="logic-rules-section" class="row mb-2">
+              <div class="col">
+                <div class="row mb-2">
+                  <div class="col-auto"><h3>Logic Rules</h3></div>
+                  <div class="col-auto">
+                    <button
+                      type="button"
+                      id="hide-logic-rules-btn"
+                      class="btn btn-sm btn-outline-danger"
+                    >
+                      Hide
+                    </button>
+                  </div>
+                </div>
+                <div id="logic-rules" class="table-responsive">
+                  <table
+                    id="logic-rules-table"
+                    class="table align-middle w-auto"
+                  >
+                    <thead>
+                      <tr>
+                        <th scope="col" colspan="3">Objects</th>
+                        <th scope="col">Rules</th>
+                      </tr>
+                    </thead>
+                    <tbody id="logic-rules-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div id="score-calculator-section" class="row mb-2">
+              <div class="col">
+                <div class="row mb-2">
+                  <div class="col-auto"><h3>Final Score Calculator</h3></div>
+                  <div class="col-auto">
+                    <button
+                      type="button"
+                      id="hide-score-calculator-btn"
+                      class="btn btn-sm btn-outline-danger"
+                    >
+                      Hide
+                    </button>
+                  </div>
+                </div>
+                <div id="score-calculator" class="table-responsive">
+                  <table
+                    id="score-table"
+                    class="table table-bordered align-middle text-center"
+                  >
+                    <thead>
+                      <tr class="align-middle">
+                        <th scope="col">First Theory</th>
+                        <th scope="col">
+                          <img src="images/asteroid.png" alt="Asteroid" />
+                          Asteroid
+                        </th>
+                        <th scope="col">
+                          <img src="images/comet.png" alt="Comet" />
+                          Comet
+                        </th>
+                        <th scope="col">
+                          <img src="images/gas-cloud.png" alt="Gas Cloud" />
+                          Gas Cloud
+                        </th>
+                        <th scope="col">
+                          <img
+                            src="images/dwarf-planet.png"
+                            alt="Dwarf Planet"
+                          />
+                          Dwarf Planet
+                        </th>
+                        <th scope="col">
+                          <img src="images/planet-x.png" alt="Planet X" />
+                          Located Planet X
+                        </th>
+                        <th scope="col">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <input
+                            type="number"
+                            id="first-theory-points"
+                            class="form-control"
+                            min="0"
+                            step="1"
+                          />
+                        </td>
+                        <td>
+                          <div class="row gx-2 align-items-center">
+                            <div class="col">
+                              <input
+                                type="number"
+                                id="asteroid-points"
+                                class="form-control"
+                                min="0"
+                                step="1"
+                              />
+                            </div>
+                            <div class="col-auto">
+                              x<span id="asteroid-per-points"></span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="row gx-2 align-items-center">
+                            <div class="col">
+                              <input
+                                type="number"
+                                id="comet-points"
+                                class="form-control"
+                                min="0"
+                                step="1"
+                              />
+                            </div>
+                            <div class="col-auto">
+                              x<span id="comet-per-points"></span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="row gx-2 align-items-center">
+                            <div class="col">
+                              <input
+                                type="number"
+                                id="gas-cloud-points"
+                                class="form-control"
+                                min="0"
+                                step="1"
+                              />
+                            </div>
+                            <div class="col-auto">
+                              x<span id="gas-cloud-per-points"></span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="row gx-2 align-items-center">
+                            <div class="col">
+                              <input
+                                type="number"
+                                id="dwarf-planet-points"
+                                class="form-control"
+                                min="0"
+                                step="1"
+                              />
+                            </div>
+                            <div class="col-auto">
+                              x<span id="dwarf-planet-per-points"></span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            id="locate-planet-x-points"
+                            class="form-control"
+                            min="0"
+                            max="10"
+                            step="2"
+                          />
+                        </td>
+                        <td id="score-total">0</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div id="starting-info-section" class="row mb-2">
+              <div class="col">
+                <div class="row mb-2">
+                  <div class="col-auto"><h3>Starting Information</h3></div>
+                  <div class="col-auto">
+                    <button
+                      type="button"
+                      id="hide-starting-info-btn"
+                      class="btn btn-sm btn-outline-danger"
+                    >
+                      Hide
+                    </button>
+                  </div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col">
+                    <strong>Difficulty:</strong> <span id="difficulty"></span>
+                  </div>
+                </div>
+                <div id="starting-info" class="row">
+                  <div class="col overflow-x-auto">
+                    <ol id="starting-info-list"></ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="research-notes-info" class="row">
+              <div class="col">
+                <div class="row mb-2">
+                  <div class="col-auto">
+                    <h3>Research & Conference Notes</h3>
+                  </div>
+                  <div class="col-auto">
+                    <button
+                      type="button"
+                      id="hide-research-notes-btn"
+                      class="btn btn-sm btn-outline-danger"
+                    >
+                      Hide
+                    </button>
+                  </div>
+                </div>
+                <div id="research-notes" class="table-responsive">
+                  <table class="table table-bordered table-hover align-middle">
+                    <thead>
+                      <tr>
+                        <th scope="col" class="small-col"></th>
+                        <th scope="col">Topic</th>
+                        <th scope="col">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody id="research-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 order-lg-1">
+            <h3>Move Notes</h3>
+            <div class="table-responsive">
+              <table id="moves-table" class="table table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th scope="col" class="small-col">Player</th>
+                    <th scope="col">Action</th>
+                    <th scope="col">Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="moves-body"></tbody>
+              </table>
+            </div>
+            <div class="text-secondary">
+              New rows will automatically be added whenever you edit the last
+              row.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-secondary" style="font-size: 0.8em">
+        See the source code at
+        <a
+          href="https://github.com/josephlou5/planet-x-searching"
+          target="_blank"
+          >https://github.com/josephlou5/planet-x-searching</a
+        >.
+      </div>
+    </div>
+
+    <!-- Bootstrap JS (Popper not needed) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"
+      integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- JQuery -->
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="script.js"></script>
+  </body>
+</html>
