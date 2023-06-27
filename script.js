@@ -136,6 +136,7 @@ $.fn.getId = function () {
 
 $.fn.forEach = function (func) {
   this.each((index, element) => func($(element), index));
+  return this;
 };
 
 $.fn.mapEach = function (func) {
@@ -146,6 +147,16 @@ $.fn.mapEach = function (func) {
     result.push(value);
   });
   return result;
+};
+
+$.fn.chooseClass = function (classes, key) {
+  if (classes) {
+    this.removeClass(Object.values(classes));
+    if (key != null && key in classes) {
+      this.addClass(classes[key]);
+    }
+  }
+  return this;
 };
 
 /**
@@ -463,10 +474,11 @@ function startGame(gameSettings) {
           return;
         }
       }
+      const radioName = `${object}-sector${sector}`;
       $row.append(
-        $("<td>").append(
+        $("<td>", { id: `${radioName}-cell`, class: "hint-cell" }).append(
           BootstrapHtml.buttonGroup(
-            `${object}-sector${sector}`,
+            radioName,
             [
               { hint: "no", accent: "danger", icon: "x-lg" },
               {
@@ -1086,11 +1098,10 @@ $(() => {
         $(window).off(event);
         return;
       }
-      if (window.matchMedia("(max-width: 800px)").matches) {
-        $btnGroups.removeClass("btn-group").addClass("btn-group-vertical");
-      } else {
-        $btnGroups.removeClass("btn-group-vertical").addClass("btn-group");
-      }
+      $btnGroups.chooseClass(
+        { regular: "btn-group", vertical: "btn-group-vertical" },
+        window.matchMedia("(min-width: 800px)").matches ? "regular" : "vertical"
+      );
     })
     .trigger("resize");
 
@@ -1129,35 +1140,74 @@ $(() => {
       location.href = getUrl(currentGameSettings);
     });
 
-    // update the counts whenever a hint is changed
+    // update hints table whenever a hint is changed
+    const BG_COLOR_CLASSES = {
+      success: "bg-success-subtle",
+      danger: "bg-danger-subtle",
+    };
+    const TEXT_COLOR_CLASSES = {
+      success: "text-success",
+      danger: "text-danger",
+    };
     $(".hint-radio").on("change", (event) => {
       const $input = $(event.target);
-      const name = $input.attr("name");
-      // update the hint cell
-      $(`#${name}-cell`).toggleClass(
-        "bg-success-subtle",
-        $(`#${name}-yes`).prop("checked")
-      );
       // get the count for this object
       const object = $input.attr("object");
-      const total = $(
-        `.hint-radio[object="${object}"][hint="yes"]:checked`
-      ).length;
-      // update count text and cell
-      const $cell = $(`#${object}-count-cell`);
-      const $count = $(`#${object}-count`);
-      $count.text(total);
-      // clear "class" attr
-      $cell.attr("class", "");
-      $count.attr("class", "");
+      const $objectRadios = $(`.hint-radio[object="${object}"]`);
+      const numObjects = $objectRadios.filter('[hint="yes"]:checked').length;
+      // update count text and cell color
       const limit =
         MODE_SETTINGS[currentGameSettings.mode].objects[object].count;
-      if (total === limit) {
-        $cell.addClass("bg-success-subtle");
-        $count.addClass("text-success");
-      } else if (total > limit) {
-        $cell.addClass("bg-danger-subtle");
-        $count.addClass("text-danger");
+      let cellClass = null;
+      let countClass = null;
+      if (numObjects === limit) {
+        cellClass = "success";
+        countClass = "success";
+      } else if (numObjects > limit) {
+        cellClass = "danger";
+        countClass = "danger";
+      } else if (
+        numObjects + $objectRadios.filter('[hint="maybe"]:checked').length <
+        limit
+      ) {
+        // not enough "maybe" buttons left for object count
+        cellClass = "danger";
+      }
+      $(`#${object}-count-cell`).chooseClass(BG_COLOR_CLASSES, cellClass);
+      $(`#${object}-count`)
+        .text(numObjects)
+        .chooseClass(TEXT_COLOR_CLASSES, countClass);
+      // update the hint cell colors for this sector (there must be exactly
+      // object per sector)
+      const sector = $input.attr("sector");
+      const $sectorRadios = $(`.hint-radio[sector="${sector}"]`);
+      const $sectorYesRadios = $sectorRadios.filter('[hint="yes"]');
+      const numYes = $sectorYesRadios.filter(":checked").length;
+      const numMaybe = $sectorRadios.filter('[hint="maybe"]:checked').length;
+      $sectorYesRadios.forEach(($input) => {
+        let classKey = null;
+        if (numMaybe === 0 && numYes === 0) {
+          // entire sector is marked as "no", which is bad
+          classKey = "danger";
+        } else if ($input.prop("checked")) {
+          if (numYes === 1) {
+            // the only one that's checked
+            classKey = "success";
+          } else {
+            // multiple are checked, and this is one of them
+            classKey = "danger";
+          }
+        }
+        const name = $input.attr("name");
+        $(`#${name}-cell`).chooseClass(BG_COLOR_CLASSES, classKey);
+      });
+      if (numYes === 1 && $input.attr("hint") === "no") {
+        // change everything else in this sector from "maybe" to "no"
+        // (doesn't trigger this handler again)
+        $sectorRadios.filter('[hint="maybe"]:checked').forEach(($input) => {
+          const name = $input.attr("name");
+          $(`#${name}-no`).prop("checked", true);
+        });
       }
     });
 
@@ -1189,22 +1239,16 @@ $(() => {
       const btnSelector = `#hide-${name}-btn`;
       $(btnSelector).on("click", (event) => {
         const $btn = $(btnSelector);
-        const $element = $(`#${name}`);
-        if ($btn.text().trim() === "Hide") {
-          // hide
-          $element.addClass("d-none");
-          $btn
-            .removeClass("btn-outline-danger")
-            .addClass("btn-outline-success")
-            .text("Show");
-        } else {
-          // show
-          $element.removeClass("d-none");
-          $btn
-            .removeClass("btn-outline-success")
-            .addClass("btn-outline-danger")
-            .text("Hide");
-        }
+        const showing = $btn.text().trim() === "Show";
+        // toggle section
+        $(`#${name}`).toggleClass("d-none", !showing);
+        // toggle button
+        $btn
+          .chooseClass(
+            { success: "btn-outline-success", danger: "btn-outline-danger" },
+            showing ? "danger" : "success"
+          )
+          .text(showing ? "Hide" : "Show");
       });
     }
 

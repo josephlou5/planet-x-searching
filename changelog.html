@@ -79,6 +79,38 @@
           </li>
         </ul>
       </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.4</span>
+          <span class="fst-italic text-muted ms-2">2023-06-27 11:26</span>
+        </div>
+        <ul>
+          <li>
+            Add more cell color hints to the hints table
+            <ul>
+              <li>
+                When more than one object is selected for a sector, the selected
+                cells turn red (should only have one object per sector)
+              </li>
+              <li>
+                When an object is selected for a sector and a "no" is selected,
+                all the other radios for that sector are also set to "no"
+                (should only have one object per sector, so all the other ones
+                are for sure no)
+              </li>
+              <li>
+                When an entire sector is marked as "no", all the cells turn red
+                (every sector needs an object)
+              </li>
+              <li>
+                When there aren't enough "maybe" buttons left for an object, its
+                count cell turns red
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
     </div>
   </body>
 </html>
