@@ -1060,7 +1060,8 @@ $(() => {
           accent: modeAccents[mode],
           content: `${mode.toTitleCase()} (${numSectors} sectors)`,
         };
-      })
+      }),
+      { divClass: "dynamic-vertical-btn-group" }
     )
   );
   // initialize difficulty choice
@@ -1073,9 +1074,26 @@ $(() => {
           content: `${level.toTitleCase()} (${numFacts} facts)`,
         };
       }),
-      { elementAccent: "primary" }
+      { divClass: "dynamic-vertical-btn-group", elementAccent: "primary" }
     )
   );
+
+  // change button groups to vertical when the screen is small
+  $(window)
+    .on("resize", (event) => {
+      const $btnGroups = $(".dynamic-vertical-btn-group");
+      if ($btnGroups.length === 0) {
+        // no longer choosing game settings
+        $(window).off(event);
+        return;
+      }
+      if (window.matchMedia("(max-width: 800px)").matches) {
+        $btnGroups.removeClass("btn-group").addClass("btn-group-vertical");
+      } else {
+        $btnGroups.removeClass("btn-group-vertical").addClass("btn-group");
+      }
+    })
+    .trigger("resize");
 
   function getGameSettings() {
     let invalid = false;
