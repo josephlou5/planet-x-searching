@@ -35,3 +35,7 @@ textarea {
 #score-table thead th {
   white-space: nowrap;
 }
+
+.moves-table-col {
+  min-width: 250px;
+}

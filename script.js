@@ -658,7 +658,7 @@ function addMoveRow() {
         )
       ),
       // action column
-      $("<td>").append(
+      $("<td>", { class: "moves-table-col" }).append(
         // do "mt-2" on the args divs so that there is no bottom space if they
         // are hidden (doing "mb-2" here will cause a space)
         $("<div>", { class: "row gx-2 align-items-center" }).append(
@@ -742,7 +742,7 @@ function addMoveRow() {
         )
       ),
       // notes column
-      $("<td>").append(
+      $("<td>", { class: "moves-table-col" }).append(
         BootstrapHtml.textarea({ rows: 1, placeholder: "Notes" })
       )
     )
