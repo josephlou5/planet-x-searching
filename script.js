@@ -564,7 +564,6 @@ function startGame(gameSettings) {
                   const objectId = `${hintRadioName}-${object}`;
                   return {
                     id: objectId,
-                    // TODO: check if this is needed
                     value: object,
                     content: [
                       createObjectImage(object),
