@@ -32,8 +32,25 @@ textarea {
   resize: none;
 }
 
+[contenteditable] {
+  text-align: start;
+  width: 100%;
+  height: 100%;
+}
+
+[contenteditable]:empty:before {
+  content: attr(placeholder);
+  color: gray;
+  cursor: text;
+}
+
 #score-table thead th {
   white-space: nowrap;
+}
+
+.research-table-col {
+  /* Exactly enough so that the dropdowns fit with the perfect padding. */
+  min-width: 347px;
 }
 
 .moves-table-col {

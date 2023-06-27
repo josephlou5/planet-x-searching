@@ -124,6 +124,9 @@ String.prototype.toTitleCase = function () {
 String.prototype.hyphenated = function () {
   return this.replace(/ /g, "-");
 };
+String.prototype.unhyphenated = function () {
+  return this.replace(/-/g, " ");
+};
 
 Array.fromRange = (length, func = null) =>
   new Array(length)
@@ -173,13 +176,20 @@ const BootstrapHtml = {
     attrs.class = classes.join(" ");
     return $("<input>", attrs);
   },
-  textarea: function ({ textareaClass = null, ...attrs } = {}) {
+  editable: function ({ editableClass = null, ...attrs } = {}) {
     const classes = ["form-control"];
-    if (textareaClass != null) {
-      classes.push(textareaClass);
+    if (editableClass != null) {
+      classes.push(editableClass);
     }
     attrs.class = classes.join(" ");
-    return $("<textarea>", attrs);
+    attrs.contenteditable = true;
+    const $div = $("<div>", attrs);
+    $div.on("input focusout", (event) => {
+      if (["<br>", "<div><br></div>"].includes($div.html())) {
+        $div.empty();
+      }
+    });
+    return $div;
   },
   buttonGroup: function (
     name,
@@ -273,11 +283,14 @@ const BootstrapHtml = {
       id = null,
       dropdownClass = null,
       defaultBlank = true,
+      disableDefault = true,
       deleteDefault = true,
       onlyLabels = false,
       ...attrs
     } = {}
   ) {
+    if (!disableDefault) deleteDefault = false;
+
     // select attrs
     if (id != null) {
       attrs.id = id;
@@ -315,7 +328,7 @@ const BootstrapHtml = {
       defaultBlank && !hasSelected
         ? $("<option>", {
             value: "",
-            disabled: true,
+            disabled: disableDefault,
             selected: true,
             default: true,
           }).text("-")
@@ -462,7 +475,7 @@ function startGame(gameSettings) {
     $objectRows.forEach(($row) => {
       if ($row.attr("notes")) {
         $row.append(
-          $("<td>").append(BootstrapHtml.textarea({ placeholder: "Notes" }))
+          $("<td>").append(BootstrapHtml.editable({ placeholder: "Notes" }))
         );
         return;
       }
@@ -546,9 +559,9 @@ function startGame(gameSettings) {
   );
 
   // populate points for each object (in final score calculator)
-  for (const [key, { points }] of Object.entries(objectSettings)) {
+  for (const [object, { points }] of Object.entries(objectSettings)) {
     if (points == null) continue;
-    $(`#${key}-per-points`).text(points);
+    $(`#${object}-per-points`).text(points);
   }
 
   // initialize starting info table
@@ -580,7 +593,7 @@ function startGame(gameSettings) {
                     content: [
                       createObjectImage(object),
                       " ",
-                      object.toTitleCase(),
+                      object.unhyphenated().toTitleCase(),
                     ],
                   };
                 }
@@ -599,14 +612,28 @@ function startGame(gameSettings) {
   }
 
   // initialize research table
+  const topicOptions = ["Asteroids", "Comets", "Dwarf Planets", "Gas Clouds"];
   $("#research-body").append(
     settings.research.map((letter) =>
       $("<tr>").append(
         $("<th>", { scope: "row" }).text(letter),
-        $("<td>").append(BootstrapHtml.input({ placeholder: "Topic" })),
         $("<td>").append(
-          BootstrapHtml.textarea({ rows: 1, placeholder: "Notes" })
-        )
+          $("<div>", { class: "row gx-2 align-items-center" }).append(
+            $("<div>", { class: "col-auto" }).append(
+              BootstrapHtml.dropdown(topicOptions, { onlyLabels: true })
+            ),
+            $("<div>", { class: "col-auto" }).text("&"),
+            $("<div>", { class: "col-auto" }).append(
+              BootstrapHtml.dropdown(topicOptions, {
+                // let the user go back to a blank on the second one, since the
+                // topic might only be about one object
+                disableDefault: false,
+                onlyLabels: true,
+              })
+            )
+          )
+        ),
+        $("<td>").append(BootstrapHtml.editable({ placeholder: "Notes" }))
       )
     ),
     settings.conferences.map((letter) =>
@@ -615,14 +642,12 @@ function startGame(gameSettings) {
         $("<td>").append(
           $("<div>", { class: "row gx-2" }).append(
             $("<div>", { class: "col-auto col-form-label" }).text("Planet X &"),
-            $("<div>", { class: "col" }).append(
-              BootstrapHtml.input({ placeholder: "Topic" })
+            $("<div>", { class: "col-auto" }).append(
+              BootstrapHtml.dropdown(topicOptions, { onlyLabels: true })
             )
           )
         ),
-        $("<td>").append(
-          BootstrapHtml.textarea({ rows: 1, placeholder: "Notes" })
-        )
+        $("<td>").append(BootstrapHtml.editable({ placeholder: "Notes" }))
       )
     )
   );
@@ -670,7 +695,7 @@ function addMoveRow() {
         )
       ),
       // action column
-      $("<td>", { class: "moves-table-col" }).append(
+      $("<td>").append(
         // do "mt-2" on the args divs so that there is no bottom space if they
         // are hidden (doing "mb-2" here will cause a space)
         $("<div>", { class: "row gx-2 align-items-center" }).append(
@@ -754,8 +779,10 @@ function addMoveRow() {
         )
       ),
       // notes column
-      $("<td>", { class: "moves-table-col" }).append(
-        BootstrapHtml.textarea({ rows: 1, placeholder: "Notes" })
+      $("<td>").append(
+        // would be nice to make this "height: 100%" so that it expanded if any
+        // action args came up, but it doesn't work for some reason
+        BootstrapHtml.editable({ placeholder: "Notes" })
       )
     )
   );
