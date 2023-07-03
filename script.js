@@ -1482,9 +1482,8 @@ $(() => {
       "starting-info",
       "research-notes",
     ]) {
-      const btnSelector = `#hide-${name}-btn`;
-      $(btnSelector).on("click", (event) => {
-        const $btn = $(btnSelector);
+      $(`#${name}-header`).on("click", (event) => {
+        const $btn = $(`#hide-${name}-btn`);
         const showing = $btn.text().trim() === "Show";
         // toggle section
         $(`#${name}`).toggleClass("d-none", !showing);
