@@ -740,14 +740,18 @@ function addMoveRow() {
           $("<div>", { class: "mb-2" }).append(
             BootstrapHtml.radioButtonGroup(
               surveyObjectRadioName,
-              ["asteroid", "comet", "dwarf-planet", "gas-cloud"].map(
-                (object) => {
-                  return {
-                    value: object,
-                    content: createObjectImage(object),
-                  };
-                }
-              ),
+              [
+                "asteroid",
+                "comet",
+                "dwarf-planet",
+                "gas-cloud",
+                "truly-empty",
+              ].map((object) => {
+                return {
+                  value: object,
+                  content: createObjectImage(object),
+                };
+              }),
               { elementAccent: "secondary", elementClass: "" }
             )
           ),
@@ -844,10 +848,9 @@ function addMoveRow() {
       end += numSectors;
     }
     const numSectorsSurveyed = end - start + 1;
-    console.log("start:", start, "end:", end, "diff:", numSectorsSurveyed);
     const cost = 4 - Math.floor((numSectorsSurveyed - 1) / 3);
     if (setText) setTimeCost(cost);
-    return text;
+    return cost;
   }
 
   // only includes the player and action selections (not notes)
