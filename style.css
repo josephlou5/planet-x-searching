@@ -2,6 +2,38 @@
   min-width: 140px;
 }
 
+/* Copy Bootstrap's `btn-*`, but with purple instead */
+.btn-purple {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--bs-purple);
+  --bs-btn-border-color: var(--bs-purple);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--bs-indigo);
+  --bs-btn-hover-border-color: var(--bs-indigo);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--bs-indigo);
+  --bs-btn-active-border-color: var(--bs-indigo);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--bs-purple);
+  --bs-btn-disabled-border-color: var(--bs-purple);
+}
+
+/* Copy Bootstrap's `btn-outline-*`, but with purple instead */
+.btn-outline-purple {
+  --bs-btn-color: var(--bs-purple);
+  --bs-btn-border-color: var(--bs-purple);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--bs-purple);
+  --bs-btn-hover-border-color: var(--bs-purple);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--bs-purple);
+  --bs-btn-active-border-color: var(--bs-purple);
+  --bs-btn-disabled-color: var(--bs-purple);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--bs-purple);
+  --bs-gradient: none;
+}
+
 img {
   width: 25px;
   height: 25px;

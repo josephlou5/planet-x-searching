@@ -1,7 +1,13 @@
 const GAME_SETTINGS = {
   mode: "game-mode",
-  players: "num-players",
+  playerColors: "player-colors",
   difficulty: "difficulty",
+};
+const PLAYER_COLORS = {
+  blue: "primary",
+  purple: "purple",
+  red: "danger",
+  yellow: "warning",
 };
 
 const MODE_SETTINGS = {
@@ -191,7 +197,8 @@ const BootstrapHtml = {
     });
     return $div;
   },
-  buttonGroup: function (
+  _buttonGroup: function (
+    inputType,
     name,
     elements,
     {
@@ -254,7 +261,7 @@ const BootstrapHtml = {
       }
       return [
         $("<input>", {
-          type: "radio",
+          type: inputType,
           id: elementId,
           name: name,
           class: inputClass,
@@ -276,6 +283,12 @@ const BootstrapHtml = {
         addButton(onlyValues ? { value: options } : options, index)
       )
     );
+  },
+  radioButtonGroup: function () {
+    return this._buttonGroup("radio", ...arguments);
+  },
+  checkboxButtonGroup: function () {
+    return this._buttonGroup("checkbox", ...arguments);
   },
   dropdown: function (
     elements,
@@ -379,8 +392,11 @@ function getUrl(settings = {}) {
       : document.URL.slice(0, questionMarkIndex);
   const args = [];
   for (const key of Object.keys(GAME_SETTINGS)) {
-    const value = settings[key];
+    let value = settings[key];
     if (value == null) continue;
+    if (key === "playerColors") {
+      value = value.map((color) => color.charAt(0).toUpperCase()).join("");
+    }
     args.push(`${key}=${value}`);
   }
   if (args.length > 0) {
@@ -413,14 +429,6 @@ function toggleImageWhiteVariant(selector) {
 
 /** Starts the game by initializing the page with the given game settings. */
 function startGame(gameSettings) {
-  if (gameSettings.players != null) {
-    const players = Number(gameSettings.players);
-    if (isNaN(players)) {
-      gameSettings.players = null;
-    } else {
-      gameSettings.players = players;
-    }
-  }
   const { mode, difficulty } = gameSettings;
 
   const $gameSettings = $("#game-settings");
@@ -490,7 +498,7 @@ function startGame(gameSettings) {
       const radioName = `${object}-sector${sector}`;
       $row.append(
         $("<td>", { id: `${radioName}-cell`, class: "hint-cell" }).append(
-          BootstrapHtml.buttonGroup(
+          BootstrapHtml.radioButtonGroup(
             radioName,
             [
               { hint: "no", accent: "danger", icon: "x-lg" },
@@ -582,7 +590,7 @@ function startGame(gameSettings) {
               )
             ),
             $("<div>", { class: "col-auto col-form-label" }).text("is not a"),
-            BootstrapHtml.buttonGroup(
+            BootstrapHtml.radioButtonGroup(
               hintRadioName,
               ["asteroid", "comet", "dwarf-planet", "gas-cloud"].map(
                 (object) => {
@@ -662,7 +670,6 @@ function startGame(gameSettings) {
 let movesCounter = 0;
 /** Adds a row to the moves table. */
 function addMoveRow() {
-  const numPlayers = currentGameSettings.players;
   const numSectors = MODE_SETTINGS[currentGameSettings.mode].numSectors;
 
   const MOVE_ROW_CLASS = "move-row";
@@ -686,12 +693,17 @@ function addMoveRow() {
     }).append(
       // player column
       $("<td>").append(
-        BootstrapHtml.buttonGroup(
+        BootstrapHtml.radioButtonGroup(
           playerRadioName,
-          Array.fromRange(numPlayers, (index) => {
-            return { value: index + 1, attrs: { move: moveId } };
+          currentGameSettings.playerColors.map((color) => {
+            return {
+              value: color,
+              attrs: { move: moveId },
+              accent: PLAYER_COLORS[color],
+              content: color.charAt(0).toUpperCase(),
+            };
           }),
-          { divClass: PLAYER_SELECT_CLASS, elementAccent: "success" }
+          { divClass: PLAYER_SELECT_CLASS }
         )
       ),
       // action column
@@ -726,7 +738,7 @@ function addMoveRow() {
           action: "survey",
         }).append(
           $("<div>", { class: "mb-2" }).append(
-            BootstrapHtml.buttonGroup(
+            BootstrapHtml.radioButtonGroup(
               surveyObjectRadioName,
               ["asteroid", "comet", "dwarf-planet", "gas-cloud"].map(
                 (object) => {
@@ -771,7 +783,7 @@ function addMoveRow() {
           class: `${actionArgsClass} mt-2 d-none`,
           action: "research",
         }).append(
-          BootstrapHtml.buttonGroup(
+          BootstrapHtml.radioButtonGroup(
             `${actionSelectId}-research-area`,
             MODE_SETTINGS[currentGameSettings.mode].research,
             { onlyValues: true, elementAccent: "secondary" }
@@ -1042,48 +1054,81 @@ function parseUrl() {
   const questionMarkIndex = document.URL.indexOf("?");
   if (questionMarkIndex === -1) return;
   const args = decodeURI(document.URL.slice(questionMarkIndex + 1)).split("&");
-  // find last time args are specified
+  // find last value for each arg
   const options = {};
   for (const arg of args) {
-    const parts = arg.split("=");
+    const parts = arg.split("=").map((part) => part.trim());
     if (parts.length !== 2) continue;
     const [name, value] = parts;
+    if (name.length === 0 || value.length === 0) continue;
     if (!(name in GAME_SETTINGS)) continue;
     options[name] = value;
   }
   // set args
-  let allArgsSet = true;
+  let allArgsValid = true;
   for (const [key, name] of Object.entries(GAME_SETTINGS)) {
     const value = options[key];
     if (value == null) {
-      allArgsSet = false;
+      allArgsValid = false;
       continue;
     }
-    let success = false;
-    $(`input[name="${name}"]`).forEach(($input) => {
-      // use weak inequality for numbers
-      if ($input.val() == value) {
-        $input.prop("checked", true);
-        success = true;
-        return false;
+    if (key === "playerColors") {
+      // special handling
+      const colors = Object.fromEntries(
+        Object.keys(PLAYER_COLORS).map((color) => [
+          color.charAt(0).toLowerCase(),
+          color,
+        ])
+      );
+      const seenColors = [];
+      for (let i = 0; i < value.length; i++) {
+        const char = value.charAt(i).toLowerCase();
+        const color = colors[char];
+        if (color == null) continue;
+        const $checkbox = $(`#${color}-player`);
+        if ($checkbox.prop("checked")) continue;
+        $checkbox.prop("checked", true);
+        seenColors.push(color);
       }
-    });
-    if (!success) {
-      allArgsSet = false;
-      // clear the value
-      options[key] = null;
+      if (seenColors.length === 0) {
+        allArgsValid = false;
+        // clear the value
+        options[key] = null;
+      } else {
+        // save the colors
+        options[key] = seenColors;
+        if (seenColors.length < 2) {
+          // don't have enough colors to be valid
+          allArgsValid = false;
+        }
+      }
+    } else {
+      let valueFound = false;
+      $(`input[name="${name}"]`).forEach(($input) => {
+        // use weak inequality for numbers
+        if ($input.val() == value) {
+          $input.prop("checked", true);
+          valueFound = true;
+          return false;
+        }
+      });
+      if (!valueFound) {
+        allArgsValid = false;
+        // clear the value
+        options[key] = null;
+      }
     }
   }
   // set proper url args
   history.replaceState(null, "", getUrl(options));
-  return allArgsSet;
+  return allArgsValid;
 }
 
 $(() => {
   // initialize mode choice
   const modeAccents = { standard: "primary", expert: "danger" };
   $("#game-mode-group").append(
-    BootstrapHtml.buttonGroup(
+    BootstrapHtml.radioButtonGroup(
       GAME_SETTINGS.mode,
       Object.entries(MODE_SETTINGS).map(([mode, settings]) => {
         const numSectors = Object.values(settings.objects).reduce(
@@ -1102,9 +1147,23 @@ $(() => {
       { divClass: "dynamic-vertical-btn-group" }
     )
   );
+  // initialize player colors choice
+  $("#player-colors-group").append(
+    BootstrapHtml.checkboxButtonGroup(
+      GAME_SETTINGS.playerColors,
+      Object.entries(PLAYER_COLORS).map(([color, accent]) => {
+        return {
+          id: `${color}-player`,
+          value: color,
+          accent,
+          content: color.toTitleCase(),
+        };
+      })
+    )
+  );
   // initialize difficulty choice
   $("#difficulty-group").append(
-    BootstrapHtml.buttonGroup(
+    BootstrapHtml.radioButtonGroup(
       GAME_SETTINGS.difficulty,
       Object.entries(DIFFICULTY_START_HINTS).map(([level, numFacts]) => {
         return {
@@ -1112,7 +1171,7 @@ $(() => {
           content: `${level.toTitleCase()} (${numFacts} facts)`,
         };
       }),
-      { divClass: "dynamic-vertical-btn-group", elementAccent: "primary" }
+      { divClass: "dynamic-vertical-btn-group", elementAccent: "secondary" }
     )
   );
 
@@ -1137,13 +1196,25 @@ $(() => {
     const settings = Object.fromEntries(
       Object.entries(GAME_SETTINGS).map(([key, name]) => {
         let value = null;
-        $(`input[name="${name}"]`).forEach(($input) => {
-          if ($input.prop("checked")) {
-            value = $input.val();
-            return false;
-          }
-        });
-        if (value == null) invalid = true;
+        const $inputs = $(`input[name="${name}"]`);
+        if (key === "playerColors") {
+          // special handling
+          value = [];
+          $inputs.forEach(($input) => {
+            if ($input.prop("checked")) {
+              value.push($input.val());
+            }
+          });
+          if (value.length < 2) invalid = true;
+        } else {
+          $inputs.forEach(($input) => {
+            if ($input.prop("checked")) {
+              value = $input.val();
+              return false;
+            }
+          });
+          if (value == null) invalid = true;
+        }
         return [key, value];
       })
     );
