@@ -40,7 +40,7 @@
       <div class="mb-2">
         <span class="h1">Planet X Searching</span>
         <span class="h6 fst-italic text-black text-opacity-50 ms-1">
-          (<a href="changelog.html" class="text-reset">v0.7</a>)
+          (<a href="changelog.html" class="text-reset">v0.8</a>)
         </span>
       </div>
 
@@ -87,58 +87,61 @@
       <div id="board" class="container-fluid px-0 d-none">
         <div class="row mb-2">
           <div class="col">
-            <div class="table-responsive">
+            <div class="table-responsive position-relative">
               <table
                 id="hints-table"
-                class="table table-bordered table-hover align-middle text-center"
+                class="table table-striped table-hover align-middle text-center text-nowrap"
               >
                 <thead>
                   <tr id="sectors-head">
-                    <td></td>
+                    <th
+                      id="sectors-head-filler"
+                      class="small-col freeze-col"
+                    ></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr id="opposite-row">
-                    <td>Opposite Sector</td>
+                    <td class="freeze-col">Opposite Sector</td>
                   </tr>
                   <tr class="object-row" object="planet-x">
-                    <th scope="row" class="small-col">
+                    <th scope="row" class="freeze-col">
                       <img src="images/planet-x.png" alt="Planet X" />
                       Planet X
                     </th>
                   </tr>
                   <tr class="object-row" object="truly-empty">
-                    <th scope="row" class="small-col">
+                    <th scope="row" class="freeze-col">
                       <img src="images/truly-empty.png" alt="Truly Empty" />
                       Truly Empty
                     </th>
                   </tr>
                   <tr class="object-row" object="gas-cloud">
-                    <th scope="row" class="small-col">
+                    <th scope="row" class="freeze-col">
                       <img src="images/gas-cloud.png" alt="Gas Cloud" />
                       Gas Cloud
                     </th>
                   </tr>
                   <tr class="object-row" object="dwarf-planet">
-                    <th scope="row" class="small-col">
+                    <th scope="row" class="freeze-col">
                       <img src="images/dwarf-planet.png" alt="Dwarf Planet" />
                       Dwarf Planet
                     </th>
                   </tr>
                   <tr class="object-row" object="asteroid">
-                    <th scope="row" class="small-col">
+                    <th scope="row" class="freeze-col">
                       <img src="images/asteroid.png" alt="Asteroid" />
                       Asteroid
                     </th>
                   </tr>
                   <tr class="object-row" object="comet">
-                    <th scope="row" class="small-col">
+                    <th scope="row" class="freeze-col">
                       <img src="images/comet.png" alt="Comet" />
                       Comet
                     </th>
                   </tr>
-                  <tr class="object-row" notes="true">
-                    <th scope="row">Notes</th>
+                  <tr id="hints-notes-row" class="text-wrap">
+                    <th scope="row" class="freeze-col text-nowrap">Notes</th>
                   </tr>
                 </tbody>
               </table>
@@ -197,7 +200,7 @@
                     class="table table-bordered align-middle text-center w-auto"
                   >
                     <thead>
-                      <tr class="align-middle">
+                      <tr class="align-middle text-nowrap">
                         <th scope="col">First Theory</th>
                         <th scope="col">
                           <img src="images/asteroid.png" alt="Asteroid" />
@@ -382,6 +385,7 @@
               <table id="moves-table" class="table table-bordered table-hover">
                 <thead>
                   <tr>
+                    <th scope="col" class="small-col"></th>
                     <th scope="col" class="small-col">Player</th>
                     <th scope="col" class="moves-table-col">Action</th>
                     <th scope="col" class="moves-table-col">Notes</th>

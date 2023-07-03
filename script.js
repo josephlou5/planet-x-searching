@@ -144,8 +144,7 @@ $.fn.getId = function () {
 };
 
 $.fn.forEach = function (func) {
-  this.each((index, element) => func($(element), index));
-  return this;
+  return this.each((index, element) => func($(element), index));
 };
 
 $.fn.mapEach = function (func) {
@@ -173,6 +172,9 @@ $.fn.chooseClass = function (classes, key) {
  * @namespace
  */
 const BootstrapHtml = {
+  icon: function (icon) {
+    return $("<i>", { class: `bi bi-${icon}` });
+  },
   input: function ({ inputClass = null, ...attrs } = {}) {
     attrs.type = "text";
     const classes = ["form-control"];
@@ -197,18 +199,36 @@ const BootstrapHtml = {
     });
     return $div;
   },
-  _buttonGroup: function (
-    inputType,
-    name,
-    elements,
+  toggleButton: function (
+    accent,
+    content,
+    { id = null, btnClass = null, checked = false, ...attrs } = {}
+  ) {
+    attrs.type = "button";
+    if (id != null) {
+      attrs.id = id;
+    }
+    const classes = ["btn", `btn-${accent}`];
+    if (btnClass != null) {
+      classes.push(btnClass);
+    }
+    if (checked) {
+      classes.push("active");
+    }
+    attrs.class = classes.join(" ");
+    // attrs["data-bs-toggle"] = "button";
+    if (checked) {
+      attrs["aria-pressed"] = true;
+    }
+    return $("<button>", attrs).append(content);
+  },
+  buttonGroup: function (
+    $elements,
     {
       id = null,
       divClass = null,
       small = false,
       vertical = false,
-      onlyValues = false,
-      elementClass = null,
-      elementAccent = null,
       ...attrs
     } = {}
   ) {
@@ -233,6 +253,19 @@ const BootstrapHtml = {
     }
     attrs.role = "group";
 
+    return $("<div>", attrs).append($elements);
+  },
+  _inputButtonGroup: function (
+    inputType,
+    name,
+    elements,
+    {
+      onlyValues = false,
+      elementClass = null,
+      elementAccent = null,
+      ...groupDivAttrs
+    } = {}
+  ) {
     // classes for each input
     const elementClasses = ["btn-check"];
     if (elementClass != null) {
@@ -278,17 +311,18 @@ const BootstrapHtml = {
       ];
     }
 
-    return $("<div>", attrs).append(
+    return this.buttonGroup(
       elements.flatMap((options, index) =>
         addButton(onlyValues ? { value: options } : options, index)
-      )
+      ),
+      groupDivAttrs
     );
   },
   radioButtonGroup: function () {
-    return this._buttonGroup("radio", ...arguments);
+    return this._inputButtonGroup("radio", ...arguments);
   },
   checkboxButtonGroup: function () {
-    return this._buttonGroup("checkbox", ...arguments);
+    return this._inputButtonGroup("checkbox", ...arguments);
   },
   dropdown: function (
     elements,
@@ -317,6 +351,18 @@ const BootstrapHtml = {
     // select the first element with `selected = true`
     let hasSelected = false;
     for (const option of elements) {
+      if (option.isGroup) {
+        for (const suboption of option.elements ?? []) {
+          if (suboption.selected) {
+            if (hasSelected) {
+              suboption.selected = false;
+            } else {
+              hasSelected = true;
+            }
+          }
+        }
+        continue;
+      }
       if (option.selected) {
         if (hasSelected) {
           option.selected = false;
@@ -348,11 +394,27 @@ const BootstrapHtml = {
         : null;
 
     const $select = $("<select>", attrs);
+    let groupIndex = 0;
     $select.append(
       defaultOption,
-      elements.map((options) =>
-        addOption(onlyLabels ? { label: options } : options)
-      )
+      elements.map((options) => {
+        if (onlyLabels) {
+          return addOption({ label: options });
+        }
+        if (options.isGroup) {
+          const groupOptions = options;
+          const groupOnlyLabels = groupOptions.onlyLabels ?? false;
+          groupIndex++;
+          return $("<optgroup>", {
+            label: groupOptions.label ?? `Group ${groupIndex}`,
+          }).append(
+            (groupOptions.elements ?? []).map((options) =>
+              addOption(groupOnlyLabels ? { label: options } : options)
+            )
+          );
+        }
+        return addOption(onlyLabels ? { label: options } : options);
+      })
     );
 
     if (defaultBlank && deleteDefault) {
@@ -454,76 +516,76 @@ function startGame(gameSettings) {
   const $head = $("#sectors-head");
   const $oppositeRow = $("#opposite-row");
   const $objectRows = $(".object-row");
+  const $notesRow = $("#hints-notes-row");
   // number of objects
-  $head.append($("<th>", { class: "small-col" }).text("Count"));
+  $head.append($("<th>", { class: "small-col freeze-col col2" }).text("Count"));
   // opposite sector
-  $oppositeRow.append($("<td>"));
+  $oppositeRow.append($("<td>", { class: "freeze-col col2" }));
   // object counts
   $objectRows.forEach(($row) => {
-    if ($row.attr("notes")) {
-      $row.append($("<td>"));
-      return;
-    }
     const object = $row.attr("object");
     const info = objectSettings[object];
     $row.append(
-      $("<td>", { id: `${object}-count-cell` }).append(
+      $("<td>", {
+        id: `${object}-count-cell`,
+        class: "freeze-col col2",
+      }).append(
         $("<span>", { id: `${object}-count` }).text("0"),
         ` / ${info.count}`
       )
     );
   });
+  // notes for each sector
+  $notesRow.append($("<td>", { class: "freeze-col col2" }));
   for (let i = 0; i < numSectors; i++) {
     const sector = i + 1;
     $head.append($("<th>").text(`Sector ${sector}`));
     // add the opposite sector number
     const opposite = ((i + numSectors / 2) % numSectors) + 1;
     $oppositeRow.append($("<td>").text(`Sector ${opposite}`));
-    // add radio groups for the entire row
+    // add hint button groups for each object row
     $objectRows.forEach(($row) => {
-      if ($row.attr("notes")) {
-        $row.append(
-          $("<td>").append(BootstrapHtml.editable({ placeholder: "Notes" }))
-        );
-        return;
-      }
       const object = $row.attr("object");
       if (object === "comet") {
         // special case: only put hints in prime number sectors
         if (!isPrime(sector)) {
-          $row.append($("<td>", { class: "bg-secondary-subtle" }));
+          $row.append($("<td>"));
           return;
         }
       }
-      const radioName = `${object}-sector${sector}`;
+      const hintName = `${object}-sector${sector}`;
+      const extraAttrs = { hintName, object, sector };
       $row.append(
-        $("<td>", { id: `${radioName}-cell`, class: "hint-cell" }).append(
-          BootstrapHtml.radioButtonGroup(
-            radioName,
+        $("<td>", { id: `${hintName}-cell`, class: "hint-cell" }).append(
+          BootstrapHtml.buttonGroup(
             [
               { hint: "no", accent: "danger", icon: "x-lg" },
-              {
-                hint: "maybe",
-                accent: "secondary",
-                checked: true,
-                icon: "question-lg",
-              },
               { hint: "yes", accent: "success", icon: "check-lg" },
-            ].map(({ hint, accent, icon, checked = false }) => {
-              return {
-                value: hint,
-                attrs: { object, sector, hint },
-                checked: checked,
-                accent: accent,
-                content: $("<i>", { class: `bi bi-${icon}` }),
-              };
-            }),
-            { small: true, elementClass: "hint-radio" }
+            ].map(({ hint, accent, icon }) =>
+              BootstrapHtml.toggleButton(
+                `outline-${accent}`,
+                BootstrapHtml.icon(icon),
+                {
+                  id: `${hintName}-${hint}`,
+                  btnClass: "hint-btn",
+                  ...extraAttrs,
+                  hint,
+                }
+              )
+            ),
+            { divClass: "hint-btn-group", small: true, ...extraAttrs }
           )
         )
       );
     });
+    // add notes textbox
+    $notesRow.append(
+      $("<td>").append(BootstrapHtml.editable({ placeholder: "Notes" }))
+    );
   }
+  // freeze the second column
+  const col1Width = $("#sectors-head-filler").get(0).offsetWidth;
+  $("#hints-table .freeze-col.col2").attr("style", `left: ${col1Width}px`);
 
   // logic rules
   $("#logic-rules-body").append(
@@ -673,7 +735,6 @@ function addMoveRow() {
   const numSectors = MODE_SETTINGS[currentGameSettings.mode].numSectors;
 
   const MOVE_ROW_CLASS = "move-row";
-  const PLAYER_SELECT_CLASS = "move-player";
 
   const moveNum = movesCounter++;
   const moveId = `move${moveNum}`;
@@ -691,6 +752,9 @@ function addMoveRow() {
       moveNum: moveNum,
       new: "true",
     }).append(
+      $("<td>").append(
+        $("<div>", { class: "col-form-label" }).text(moveNum + 1)
+      ),
       // player column
       $("<td>").append(
         BootstrapHtml.radioButtonGroup(
@@ -702,15 +766,14 @@ function addMoveRow() {
               accent: PLAYER_COLORS[color],
               content: color.charAt(0).toUpperCase(),
             };
-          }),
-          { divClass: PLAYER_SELECT_CLASS }
+          })
         )
       ),
       // action column
       $("<td>").append(
         // do "mt-2" on the args divs so that there is no bottom space if they
         // are hidden (doing "mb-2" here will cause a space)
-        $("<div>", { class: "row gx-2 align-items-center" }).append(
+        $("<div>", { class: "row gx-2" }).append(
           $("<div>", { class: "col" }).append(
             BootstrapHtml.dropdown(
               [
@@ -726,7 +789,10 @@ function addMoveRow() {
               class: "invalid-feedback",
             })
           ),
-          $("<div>", { id: timeCostId, class: "col-auto d-none" }).append(
+          $("<div>", {
+            id: timeCostId,
+            class: "col-auto col-form-label d-none",
+          }).append(
             "+",
             $("<span>", { id: `${timeCostId}-num`, class: "me-1" }),
             createObjectImage("time", { class: "time" })
@@ -806,7 +872,8 @@ function addMoveRow() {
   function getSelected($select) {
     // `$select.val()` doesn't work with disabled options, so loop manually
     let selected = null;
-    $select.children("option").forEach(($option) => {
+    // use `.find()` in case the select is using groups
+    $select.find("option").forEach(($option) => {
       if ($option.attr("default")) return;
       if ($option.prop("selected")) {
         selected = $option.attr("value");
@@ -824,6 +891,10 @@ function addMoveRow() {
       $cost.removeClass("d-none");
       $(`#${timeCostId}-num`).text(cost);
     }
+  }
+
+  function surveyCostFormula(numSectorsSurveyed) {
+    return 4 - Math.floor((numSectorsSurveyed - 1) / 3);
   }
 
   function calcSurveyCost({
@@ -848,7 +919,7 @@ function addMoveRow() {
       end += numSectors;
     }
     const numSectorsSurveyed = end - start + 1;
-    const cost = 4 - Math.floor((numSectorsSurveyed - 1) / 3);
+    const cost = surveyCostFormula(numSectorsSurveyed);
     if (setText) setTimeCost(cost);
     return cost;
   }
@@ -886,11 +957,10 @@ function addMoveRow() {
       const moveId = $row.getId();
       const moveNum = Number($row.attr("moveNum"));
       // find selected player
-      const playerStr = $row
+      const player = $row
         .find(`input[name="${moveId}-player"]:checked`)
         .attr("value");
-      if (playerStr == null) return;
-      const player = Number(playerStr);
+      if (player == null) return;
       // find selected action (can be null)
       const $actionSelect = $row.find(`#${moveId}-action`);
       const actionId = $actionSelect.getId();
@@ -908,37 +978,34 @@ function addMoveRow() {
       });
     });
     for (const [player, moves] of Object.entries(playerMoves)) {
+      const playerTitle = player.toTitleCase();
       const ordered = moves.sort((a, b) => a.moveNum - b.moveNum);
       let numTargets = 0;
       let lastAction = null;
       for (const { $actionSelect, $actionFeedback, action } of ordered) {
         $actionSelect.removeClass("is-invalid");
-        $actionSelect.children("option:not([default])").prop("disabled", false);
+        $actionSelect.find("option:not([default])").prop("disabled", false);
         if (lastAction === "research") {
           // cannot research two times in a row
           if (action === "research") {
             $actionSelect.addClass("is-invalid");
             $actionFeedback.text(
-              `Player ${player}: Cannot research two times in a row`
+              `Player ${playerTitle}: Cannot research two times in a row`
             );
           }
           // disable
-          $actionSelect
-            .children('option[value="research"]')
-            .prop("disabled", true);
+          $actionSelect.find('option[value="research"]').prop("disabled", true);
         }
         if (numTargets >= 2) {
           if (action === "target") {
             // cannot target more than two times
             $actionSelect.addClass("is-invalid");
             $actionFeedback.text(
-              `Player ${player}: Cannot target more than two times`
+              `Player ${playerTitle}: Cannot target more than two times`
             );
           }
           // disable
-          $actionSelect
-            .children('option[value="target"]')
-            .prop("disabled", true);
+          $actionSelect.find('option[value="target"]').prop("disabled", true);
         }
         lastAction = action;
         if (action === "target") {
@@ -967,7 +1034,7 @@ function addMoveRow() {
 
     const $startSelect = $(`#${surveySectorStartSelectId}`);
 
-    $startSelect.children("option").forEach(($option) => {
+    $startSelect.find("option").forEach(($option) => {
       if ($option.attr("default")) return;
       if (isComet) {
         // disable non-prime numbers
@@ -1026,8 +1093,17 @@ function addMoveRow() {
     }
 
     // recreate the end sector select
+    const sectorGroups = [];
+    for (let i = 0; i < sectors.length; i += 3) {
+      const group = sectors.slice(i, i + 3);
+      sectorGroups.push({
+        isGroup: true,
+        label: `+${surveyCostFormula(i + 1)} time`,
+        elements: group,
+      });
+    }
     $endSelect.replaceWith(
-      BootstrapHtml.dropdown(sectors, { id: surveySectorEndSelectId })
+      BootstrapHtml.dropdown(sectorGroups, { id: surveySectorEndSelectId })
     );
 
     calcSurveyCost({ start: startValue, setText: true });
@@ -1242,75 +1318,144 @@ $(() => {
     });
 
     // update hints table whenever a hint is changed
+    function isActive($button) {
+      return $button.hasClass("active");
+    }
+
+    function getHintValue(hintName) {
+      if (isActive($(`#${hintName}-yes`))) return true;
+      if (isActive($(`#${hintName}-no`))) return false;
+      return null;
+    }
+
+    function getHintValues(attrs = {}) {
+      const attrsFilterStr = Object.entries(attrs)
+        .map(([key, value]) => `[${key}="${value}"]`)
+        .join("");
+      let numHints = 0;
+      const hintsValues = {};
+      const hintsByValue = { yes: [], no: [], blank: [] };
+      $(`.hint-btn-group${attrsFilterStr}`).forEach(($element) => {
+        const hintName = $element.attr("hintName");
+        if (hintName in hintsValues) return;
+        const value = getHintValue(hintName);
+        let addToKey;
+        if (value === true) addToKey = "yes";
+        else if (value === false) addToKey = "no";
+        else addToKey = "blank";
+        numHints++;
+        hintsValues[hintName] = value;
+        hintsByValue[addToKey].push(hintName);
+      });
+      return { numHints, hints: hintsValues, ...hintsByValue };
+    }
+
     const BG_COLOR_CLASSES = {
-      success: "bg-success-subtle",
-      danger: "bg-danger-subtle",
+      success: "table-success",
+      danger: "table-danger",
+      disabled: "table-secondary",
     };
     const TEXT_COLOR_CLASSES = {
       success: "text-success",
       danger: "text-danger",
     };
-    $(".hint-radio").on("change", (event) => {
-      const $input = $(event.target);
-      // get the count for this object
-      const object = $input.attr("object");
-      const $objectRadios = $(`.hint-radio[object="${object}"]`);
-      const numObjects = $objectRadios.filter('[hint="yes"]:checked').length;
-      // update count text and cell color
-      const limit =
-        MODE_SETTINGS[currentGameSettings.mode].objects[object].count;
-      let cellClass = null;
-      let countClass = null;
-      if (numObjects === limit) {
-        cellClass = "success";
-        countClass = "success";
-      } else if (numObjects > limit) {
-        cellClass = "danger";
-        countClass = "danger";
-      } else if (
-        numObjects + $objectRadios.filter('[hint="maybe"]:checked').length <
-        limit
-      ) {
-        // not enough "maybe" buttons left for object count
-        cellClass = "danger";
-      }
-      $(`#${object}-count-cell`).chooseClass(BG_COLOR_CLASSES, cellClass);
-      $(`#${object}-count`)
-        .text(numObjects)
-        .chooseClass(TEXT_COLOR_CLASSES, countClass);
-      // update the hint cell colors for this sector (there must be exactly
-      // object per sector)
-      const sector = $input.attr("sector");
-      const $sectorRadios = $(`.hint-radio[sector="${sector}"]`);
-      const $sectorYesRadios = $sectorRadios.filter('[hint="yes"]');
-      const numYes = $sectorYesRadios.filter(":checked").length;
-      const numMaybe = $sectorRadios.filter('[hint="maybe"]:checked').length;
-      $sectorYesRadios.forEach(($input) => {
-        let classKey = null;
-        if (numMaybe === 0 && numYes === 0) {
+    $(".hint-btn")
+      .on("activate", (event) => {
+        const $hintBtn = $(event.target);
+        $hintBtn.addClass("active");
+        // deactivate the other one
+        const hintName = $hintBtn.attr("hintName");
+        const hint = $hintBtn.attr("hint");
+        $(`.hint-btn[hintName="${hintName}"]:not([hint="${hint}"])`).trigger(
+          "deactivate"
+        );
+      })
+      .on("deactivate", (event) => {
+        const $hintBtn = $(event.target);
+        $hintBtn.removeClass("active");
+      })
+      .on("toggleActive", (event) => {
+        const $hintBtn = $(event.target);
+        $hintBtn.trigger(isActive($hintBtn) ? "deactivate" : "activate");
+      })
+      .on("click", (event) => {
+        const $hintBtn = $(event.currentTarget);
+        $hintBtn.trigger("toggleActive");
+
+        // update the hint cell colors for this object (must be within a limit)
+        const object = $hintBtn.attr("object");
+        const objectHints = getHintValues({ object });
+        const numYesObjects = objectHints.yes.length;
+        const numBlankObjects = objectHints.blank.length;
+        // update count text and cell color
+        const limit =
+          MODE_SETTINGS[currentGameSettings.mode].objects[object].count;
+        let cellClass = null;
+        let countClass = null;
+        if (numYesObjects === limit) {
+          cellClass = "success";
+          countClass = "success";
+        } else if (numYesObjects > limit) {
+          cellClass = "danger";
+          countClass = "danger";
+          // TODO: highlight red because too many checked for this object
+          //   would run into issue of not knowing how to reset cells in other
+          //   columns: each column would have to be checked to understand its
+          //   state, which would be checking the entire table. that's _okay_,
+          //   but not ideal.
+        } else if (numYesObjects + numBlankObjects === limit) {
+          // exactly enough buttons left to fulfill the limit
+          cellClass = "success";
+        } else if (numYesObjects + numBlankObjects < limit) {
+          // not enough buttons left to fulfill the limit
+          cellClass = "danger";
+        }
+        $(`#${object}-count-cell`).chooseClass(BG_COLOR_CLASSES, cellClass);
+        $(`#${object}-count`)
+          .text(numYesObjects)
+          .chooseClass(TEXT_COLOR_CLASSES, countClass);
+
+        // update the hint cell colors for this sector (must be exactly one
+        // object per sector)
+        const sector = $hintBtn.attr("sector");
+        const sectorHints = getHintValues({ sector });
+        const numYesSectors = sectorHints.yes.length;
+        const numBlankSectors = sectorHints.blank.length;
+        if (numYesSectors + numBlankSectors === 0) {
           // entire sector is marked as "no", which is bad
-          classKey = "danger";
-        } else if ($input.prop("checked")) {
-          if (numYes === 1) {
-            // the only one that's checked
-            classKey = "success";
-          } else {
-            // multiple are checked, and this is one of them
-            classKey = "danger";
+          for (const hintName of Object.keys(sectorHints.hints)) {
+            $(`#${hintName}-cell`).chooseClass(BG_COLOR_CLASSES, "danger");
+          }
+        } else {
+          // either this is the only one that's checked (highlight green),
+          // or multiple are checked (highlight red)
+          const hintYesClassKey = numYesSectors === 1 ? "success" : "danger";
+          // if a single object is selected and the user just selected a "no",
+          // mark the rest of the sector as "no" as well
+          const setRestNo =
+            numYesSectors === 1 &&
+            $hintBtn.attr("hint") === "no" &&
+            isActive($hintBtn);
+          for (const [hintName, value] of Object.entries(sectorHints.hints)) {
+            let classKey;
+            if (value === true) {
+              classKey = hintYesClassKey;
+            } else if (value === false) {
+              classKey = "disabled";
+            } else {
+              // blank hint
+              if (setRestNo) {
+                // select "no"
+                classKey = "disabled";
+                $(`#${hintName}-no`).trigger("activate");
+              } else {
+                classKey = null;
+              }
+            }
+            $(`#${hintName}-cell`).chooseClass(BG_COLOR_CLASSES, classKey);
           }
         }
-        const name = $input.attr("name");
-        $(`#${name}-cell`).chooseClass(BG_COLOR_CLASSES, classKey);
       });
-      if (numYes === 1 && $input.attr("hint") === "no") {
-        // change everything else in this sector from "maybe" to "no"
-        // (doesn't trigger this handler again)
-        $sectorRadios.filter('[hint="maybe"]:checked').forEach(($input) => {
-          const name = $input.attr("name");
-          $(`#${name}-no`).prop("checked", true);
-        });
-      }
-    });
 
     // final score calculator
     $("#score-table input").on("change", (event) => {
