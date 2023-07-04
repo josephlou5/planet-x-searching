@@ -34,131 +34,31 @@
 
       <div class="mb-2">
         <div>
-          <span class="fs-4">v0.1</span>
-          <span class="fst-italic text-muted ms-2">2023-06-24 19:46</span>
+          <span class="fs-4">v0.10</span>
+          <span class="fst-italic text-muted ms-2">2023-07-04 12:59</span>
         </div>
         <ul>
-          <li>Initial release</li>
           <li>
-            Supported features:
-            <ul>
-              <li>Standard and Expert mode</li>
-              <li>Initial logic rules (with different difficulties)</li>
-              <li>Final score calculator</li>
-              <li>Research notes</li>
-              <li>
-                Move tracking (for 2-4 players) with per-player validation
-              </li>
-              <li>
-                Responsiveness, so it (hopefully) looks good on mobile too!
-              </li>
-            </ul>
+            Fix comet point values (<a
+              href="https://github.com/josephlou5/planet-x-searching/pull/2"
+              target="_blank"
+              >pr#2</a
+            >; thanks
+            <a href="https://github.com/rice31415" target="_blank">rice31415</a
+            >)
           </li>
         </ul>
       </div>
 
       <div class="mb-2">
         <div>
-          <span class="fs-4">v0.2</span>
-          <span class="fst-italic text-muted ms-2">2023-06-27 10:15</span>
-        </div>
-        <ul>
-          <li>Make game settings page responsive</li>
-        </ul>
-      </div>
-
-      <div class="mb-2">
-        <div>
-          <span class="fs-4">v0.3</span>
-          <span class="fst-italic text-muted ms-2">2023-06-27 11:01</span>
+          <span class="fs-4">v0.9</span>
+          <span class="fst-italic text-muted ms-2">2023-07-03 02:56</span>
         </div>
         <ul>
           <li>
-            Add minimum width for moves columns (for better experience on
-            smaller screens)
-          </li>
-        </ul>
-      </div>
-
-      <div class="mb-2">
-        <div>
-          <span class="fs-4">v0.4</span>
-          <span class="fst-italic text-muted ms-2">2023-06-27 11:26</span>
-        </div>
-        <ul>
-          <li>
-            Add more cell color hints to the hints table
-            <ul>
-              <li>
-                When more than one object is selected for a sector, the selected
-                cells turn red (should only have one object per sector)
-              </li>
-              <li>
-                When an object is selected for a sector and a "no" is selected,
-                all the other radios for that sector are also set to "no"
-                (should only have one object per sector, so all the other ones
-                are for sure no)
-              </li>
-              <li>
-                When an entire sector is marked as "no", all the cells turn red
-                (every sector needs an object)
-              </li>
-              <li>
-                When there aren't enough "maybe" buttons left for an object, its
-                count cell turns red
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-
-      <div class="mb-2">
-        <div>
-          <span class="fs-4">v0.5</span>
-          <span class="fst-italic text-muted ms-2">2023-06-27 14:16</span>
-        </div>
-        <ul>
-          <li>
-            Change <code>textarea</code>s into <code>contenteditable</code>
-            <code>div</code>s
-            <ul>
-              <li>The "Notes" inputs will now expand as the user types</li>
-            </ul>
-          </li>
-          <li>Add minimum width to research table</li>
-          <li>Change research topic input box to dropdowns</li>
-        </ul>
-      </div>
-
-      <div class="mb-2">
-        <div>
-          <span class="fs-4">v0.6</span>
-          <span class="fst-italic text-muted ms-2">2023-07-02 20:55</span>
-        </div>
-        <ul>
-          <li>
-            Change players to their respective colors
-            <ul>
-              <li>
-                It is now easier to keep track of each player in the moves table
-                (don't need to mentally remember who is player 1, player 2,
-                etc.)
-              </li>
-              <li>Added a custom purple color for buttons</li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-
-      <div class="mb-2">
-        <div>
-          <span class="fs-4">v0.7</span>
-          <span class="fst-italic text-muted ms-2">2023-07-02 21:14</span>
-        </div>
-        <ul>
-          <li>
-            Fix Bug: Add "Truly Empty" to possible sector object choice (didn't
-            realize you could do that)
+            Allow clicking on section headers instead of small Show/Hide buttons
+            (hopefully easier experience on mobile)
           </li>
         </ul>
       </div>
@@ -206,13 +106,131 @@
 
       <div class="mb-2">
         <div>
-          <span class="fs-4">v0.9</span>
-          <span class="fst-italic text-muted ms-2">2023-07-03 02:56</span>
+          <span class="fs-4">v0.7</span>
+          <span class="fst-italic text-muted ms-2">2023-07-02 21:14</span>
         </div>
         <ul>
           <li>
-            Allow clicking on section headers instead of small Show/Hide buttons
-            (hopefully easier experience on mobile)
+            Fix Bug: Add "Truly Empty" to possible sector object choice (didn't
+            realize you could do that)
+          </li>
+        </ul>
+      </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.6</span>
+          <span class="fst-italic text-muted ms-2">2023-07-02 20:55</span>
+        </div>
+        <ul>
+          <li>
+            Change players to their respective colors
+            <ul>
+              <li>
+                It is now easier to keep track of each player in the moves table
+                (don't need to mentally remember who is player 1, player 2,
+                etc.)
+              </li>
+              <li>Added a custom purple color for buttons</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.5</span>
+          <span class="fst-italic text-muted ms-2">2023-06-27 14:16</span>
+        </div>
+        <ul>
+          <li>
+            Change <code>textarea</code>s into <code>contenteditable</code>
+            <code>div</code>s
+            <ul>
+              <li>The "Notes" inputs will now expand as the user types</li>
+            </ul>
+          </li>
+          <li>Add minimum width to research table</li>
+          <li>Change research topic input box to dropdowns</li>
+        </ul>
+      </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.4</span>
+          <span class="fst-italic text-muted ms-2">2023-06-27 11:26</span>
+        </div>
+        <ul>
+          <li>
+            Add more cell color hints to the hints table
+            <ul>
+              <li>
+                When more than one object is selected for a sector, the selected
+                cells turn red (should only have one object per sector)
+              </li>
+              <li>
+                When an object is selected for a sector and a "no" is selected,
+                all the other radios for that sector are also set to "no"
+                (should only have one object per sector, so all the other ones
+                are for sure no)
+              </li>
+              <li>
+                When an entire sector is marked as "no", all the cells turn red
+                (every sector needs an object)
+              </li>
+              <li>
+                When there aren't enough "maybe" buttons left for an object, its
+                count cell turns red
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.3</span>
+          <span class="fst-italic text-muted ms-2">2023-06-27 11:01</span>
+        </div>
+        <ul>
+          <li>
+            Add minimum width for moves columns (for better experience on
+            smaller screens)
+          </li>
+        </ul>
+      </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.2</span>
+          <span class="fst-italic text-muted ms-2">2023-06-27 10:15</span>
+        </div>
+        <ul>
+          <li>Make game settings page responsive</li>
+        </ul>
+      </div>
+
+      <div class="mb-2">
+        <div>
+          <span class="fs-4">v0.1</span>
+          <span class="fst-italic text-muted ms-2">2023-06-24 19:46</span>
+        </div>
+        <ul>
+          <li>Initial release</li>
+          <li>
+            Supported features:
+            <ul>
+              <li>Standard and Expert mode</li>
+              <li>Initial logic rules (with different difficulties)</li>
+              <li>Final score calculator</li>
+              <li>Research notes</li>
+              <li>
+                Move tracking (for 2-4 players) with per-player validation
+              </li>
+              <li>
+                Responsiveness, so it (hopefully) looks good on mobile too!
+              </li>
+            </ul>
           </li>
         </ul>
       </div>
