@@ -147,16 +147,6 @@ $.fn.forEach = function (func) {
   return this.each((index, element) => func($(element), index));
 };
 
-$.fn.mapEach = function (func) {
-  const result = [];
-  this.forEach(($element, index) => {
-    const value = func($element, index);
-    if (value == null) return;
-    result.push(value);
-  });
-  return result;
-};
-
 $.fn.chooseClass = function (classes, key) {
   if (classes) {
     this.removeClass(Object.values(classes));
@@ -1359,8 +1349,8 @@ $(() => {
       success: "text-success",
       danger: "text-danger",
     };
-    $(".hint-btn")
-      .on("activate", (event) => {
+    $(".hint-btn").on({
+      activate: (event) => {
         const $hintBtn = $(event.target);
         $hintBtn.addClass("active");
         // deactivate the other one
@@ -1369,16 +1359,16 @@ $(() => {
         $(`.hint-btn[hintName="${hintName}"]:not([hint="${hint}"])`).trigger(
           "deactivate"
         );
-      })
-      .on("deactivate", (event) => {
+      },
+      deactivate: (event) => {
         const $hintBtn = $(event.target);
         $hintBtn.removeClass("active");
-      })
-      .on("toggleActive", (event) => {
+      },
+      toggleActive: (event) => {
         const $hintBtn = $(event.target);
         $hintBtn.trigger(isActive($hintBtn) ? "deactivate" : "activate");
-      })
-      .on("click", (event) => {
+      },
+      click: (event) => {
         const $hintBtn = $(event.currentTarget);
         $hintBtn.trigger("toggleActive");
 
@@ -1455,7 +1445,8 @@ $(() => {
             $(`#${hintName}-cell`).chooseClass(BG_COLOR_CLASSES, classKey);
           }
         }
-      });
+      },
+    });
 
     // final score calculator
     $("#score-table input").on("change", (event) => {
