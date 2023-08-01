@@ -725,6 +725,11 @@ function addMoveRow() {
   const numSectors = MODE_SETTINGS[currentGameSettings.mode].numSectors;
 
   const MOVE_ROW_CLASS = "move-row";
+  const RESEARCH_DEFAULT_ACCENT = "primary";
+  const RESEARCH_OUTLINE_CLASSES = {
+    seen: "btn-outline-secondary",
+    notSeen: `btn-outline-${RESEARCH_DEFAULT_ACCENT}`,
+  };
 
   const moveNum = movesCounter++;
   const moveId = `move${moveNum}`;
@@ -846,7 +851,7 @@ function addMoveRow() {
           BootstrapHtml.radioButtonGroup(
             `${actionSelectId}-research-area`,
             MODE_SETTINGS[currentGameSettings.mode].research,
-            { onlyValues: true, elementAccent: "secondary" }
+            { onlyValues: true, elementAccent: RESEARCH_DEFAULT_ACCENT }
           )
         )
       ),
@@ -912,6 +917,55 @@ function addMoveRow() {
     const cost = surveyCostFormula(numSectorsSurveyed);
     if (setText) setTimeCost(cost);
     return cost;
+  }
+
+  function updatePlayerResearches() {
+    const moveRows = [];
+    $(`.${MOVE_ROW_CLASS}`).forEach(($row) => {
+      const moveId = $row.getId();
+      const moveNum = Number($row.attr("moveNum"));
+      // find selected player
+      const player = $row
+        .find(`input[name="${moveId}-player"]:checked`)
+        .attr("value");
+      if (player == null) return;
+      const $researchAreas = $row.find(
+        `input[name="${moveId}-action-research-area"]`
+      );
+      moveRows.push({
+        moveNum,
+        $row,
+        player,
+        $researchAreas,
+      });
+    });
+
+    moveRows.sort((a, b) => a.moveNum - b.moveNum);
+
+    const playerResearches = {};
+    for (const { $row, player, $researchAreas } of moveRows) {
+      if (!(player in playerResearches)) {
+        playerResearches[player] = new Set();
+      }
+      const researched = playerResearches[player];
+      let selectedResearch = null;
+      $researchAreas.forEach(($input) => {
+        const inputId = $input.getId();
+        const area = $input.attr("value");
+        const seen = researched.has(area);
+        const $label = $row.find(`#${inputId}-label`);
+        $label.text(
+          seen ? $label.text().toLowerCase() : $label.text().toUpperCase()
+        );
+        $label.chooseClass(RESEARCH_OUTLINE_CLASSES, seen ? "seen" : "notSeen");
+        if ($input.prop("checked")) {
+          selectedResearch = area;
+        }
+      });
+      if (selectedResearch != null) {
+        playerResearches[player].add(selectedResearch);
+      }
+    }
   }
 
   // only includes the player and action selections (not notes)
@@ -1003,6 +1057,8 @@ function addMoveRow() {
         }
       }
     }
+
+    updatePlayerResearches();
   });
 
   // when the action is changed, show its args
@@ -1115,6 +1171,11 @@ function addMoveRow() {
       // mark as invalid if not a prime number
       $endSelect.toggleClass("is-invalid", isComet && !isPrime(endSector));
     });
+  });
+
+  // research args
+  $(`input[name="${moveId}-action-research-area"]`).on("input", (event) => {
+    updatePlayerResearches();
   });
 }
 
