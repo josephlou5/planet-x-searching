@@ -5,4 +5,4 @@
 An online alternative to the player sheet for the board game
 [The Search for Planet X][game link].
 
-[game link]: https://renegadegamestudios.com/the-search-for-planet-x/
+[game link]: https://searchforplanetx.com/
