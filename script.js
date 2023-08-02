@@ -1213,13 +1213,14 @@ function parseUrl() {
         ])
       );
       const seenColors = [];
+      let playerIndex = 1;
       for (let i = 0; i < value.length; i++) {
         const char = value.charAt(i).toLowerCase();
         const color = colors[char];
         if (color == null) continue;
-        const $checkbox = $(`#${color}-player`);
-        if ($checkbox.prop("checked")) continue;
-        $checkbox.prop("checked", true);
+        if (seenColors.includes(color)) continue;
+        // add player color
+        $(`#player-${playerIndex++}-color`).append($(`#${color}-player`));
         seenColors.push(color);
       }
       if (seenColors.length === 0) {
@@ -1280,19 +1281,78 @@ $(() => {
     )
   );
   // initialize player colors choice
+  const notInPlayId = "player-color-not-in-play";
+  const dropzoneClass = "player-color-dropzone";
+  const playerColorAccents = Object.entries(PLAYER_COLORS);
   $("#player-colors-group").append(
-    BootstrapHtml.checkboxButtonGroup(
-      GAME_SETTINGS.playerColors,
-      Object.entries(PLAYER_COLORS).map(([color, accent]) => {
-        return {
-          id: `${color}-player`,
-          value: color,
-          accent,
-          content: color.toTitleCase(),
-        };
-      })
+    $("<div>").text(
+      "Drag the colors to each player. This order defines starting turn order."
+    ),
+    $("<div>", { class: "row" }).append(
+      $("<div>", { class: "col-auto" }).text("Not in play"),
+      $("<div>", {
+        id: notInPlayId,
+        class: `col ${dropzoneClass}`,
+      }).append(
+        playerColorAccents.map(([color, accent]) =>
+          $("<span>", {
+            id: `${color}-player`,
+            class: `badge bg-${accent} me-1`,
+            color,
+            draggable: true,
+          }).text(color.toTitleCase())
+        )
+      )
+    ),
+    Array.fromRange(playerColorAccents.length, (index) =>
+      $("<div>", { class: "row" }).append(
+        $("<div>", { class: "col-auto" }).text(`Player ${index + 1}`),
+        $("<div>", {
+          id: `player-${index + 1}-color`,
+          class: `col ${dropzoneClass} ${GAME_SETTINGS.playerColors}`,
+          player: index + 1,
+        })
+      )
     )
   );
+  // allow dragging the colors
+  $("[draggable]").on("dragstart", (event) => {
+    const $badge = $(event.target);
+    const dragEvent = event.originalEvent;
+    dragEvent.dataTransfer.setData("text/plain", $badge.getId());
+    dragEvent.effectAllowed = "move";
+  });
+  function allowDrop($zone) {
+    return $zone.getId() === notInPlayId || $zone.children().length === 0;
+  }
+  $(`.${dropzoneClass}`).on({
+    dragenter: (event) => {
+      const $zone = $(event.currentTarget);
+      if (!allowDrop($zone)) return;
+      event.preventDefault();
+      const dragEvent = event.originalEvent;
+      dragEvent.dataTransfer.dropEffect = "move";
+      $zone.addClass("bg-secondary-subtle");
+    },
+    dragover: (event) => {
+      const $zone = $(event.currentTarget);
+      if (allowDrop($zone)) {
+        event.preventDefault();
+      }
+    },
+    dragleave: (event) => {
+      const $zone = $(event.currentTarget);
+      $zone.removeClass("bg-secondary-subtle");
+    },
+    drop: (event) => {
+      event.preventDefault();
+      const $zone = $(event.currentTarget);
+      const dragEvent = event.originalEvent;
+      const badgeId = dragEvent.dataTransfer.getData("text/plain");
+      $zone.removeClass("bg-secondary-subtle");
+      $zone.append($(`#${badgeId}`));
+    },
+  });
   // initialize difficulty choice
   $("#difficulty-group").append(
     BootstrapHtml.radioButtonGroup(
@@ -1328,18 +1388,22 @@ $(() => {
     const settings = Object.fromEntries(
       Object.entries(GAME_SETTINGS).map(([key, name]) => {
         let value = null;
-        const $inputs = $(`input[name="${name}"]`);
         if (key === "playerColors") {
           // special handling
-          value = [];
-          $inputs.forEach(($input) => {
-            if ($input.prop("checked")) {
-              value.push($input.val());
+          const players = [];
+          $(`.${name}`).forEach(($player) => {
+            const player = Number($player.attr("player"));
+            const color = $player.find("span").attr("color");
+            if (color != null) {
+              players.push({ player, color });
             }
           });
+          value = players
+            .sort((a, b) => a.player - b.player)
+            .map(({ color }) => color);
           if (value.length < 2) invalid = true;
         } else {
-          $inputs.forEach(($input) => {
+          $(`input[name="${name}"]`).forEach(($input) => {
             if ($input.prop("checked")) {
               value = $input.val();
               return false;
@@ -1591,6 +1655,9 @@ $(() => {
   }
 
   $("#game-settings input").on("change", (event) => {
+    checkStartButton();
+  });
+  $("[draggable]").on("dragend", (event) => {
     checkStartButton();
   });
 

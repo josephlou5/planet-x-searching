@@ -1,4 +1,13 @@
+/* Copy Bootstrap's `bg-*`, but with purple instead */
+.bg-purple {
+  --bs-bg-opacity: 1;
+  /* This is slightly different because Bootstrap doesn't provide the RGB of
+     `--bs-purple`. */
+  background-color: var(--bs-purple) !important;
+}
+
 /* Copy Bootstrap's `btn-*`, but with purple instead */
+/* not used */
 .btn-purple {
   --bs-btn-color: #fff;
   --bs-btn-bg: var(--bs-purple);
