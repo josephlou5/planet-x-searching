@@ -1195,24 +1195,12 @@ function addMoveRow() {
 
 /** Parses the URL for the game settings. */
 function parseUrl() {
-  const questionMarkIndex = document.URL.indexOf("?");
-  if (questionMarkIndex === -1) return;
-  const args = decodeURI(document.URL.slice(questionMarkIndex + 1)).split("&");
-  // find last value for each arg
-  const options = {};
-  for (const arg of args) {
-    const parts = arg.split("=").map((part) => part.trim());
-    if (parts.length !== 2) continue;
-    const [name, value] = parts;
-    if (name.length === 0 || value.length === 0) continue;
-    if (!(name in GAME_SETTINGS)) continue;
-    options[name] = value;
-  }
-  // set args
+  const urlArgs = new URLSearchParams(document.location.search);
   let allArgsValid = true;
+  const settings = {};
   for (const [key, name] of Object.entries(GAME_SETTINGS)) {
-    const value = options[key];
-    if (value == null) {
+    const value = urlArgs.get(key);
+    if (value == null || value === "") {
       allArgsValid = false;
       continue;
     }
@@ -1235,12 +1223,11 @@ function parseUrl() {
         seenColors.push(color);
       }
       if (seenColors.length === 0) {
+        // don't save the value
         allArgsValid = false;
-        // clear the value
-        options[key] = null;
       } else {
         // save the colors
-        options[key] = seenColors;
+        settings[key] = seenColors;
         if (seenColors.length < 2) {
           // don't have enough colors to be valid
           allArgsValid = false;
@@ -1257,14 +1244,15 @@ function parseUrl() {
         }
       });
       if (!valueFound) {
+        // don't save the value
         allArgsValid = false;
-        // clear the value
-        options[key] = null;
+      } else {
+        settings[key] = value;
       }
     }
   }
   // set proper url args
-  history.replaceState(null, "", getUrl(options));
+  history.replaceState(null, "", getUrl(settings));
   return allArgsValid;
 }
 
