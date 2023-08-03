@@ -817,8 +817,8 @@ function addMoveRow() {
               surveyObjectRadioName,
               [
                 "asteroid",
-                "comet",
                 "dwarf-planet",
+                "comet",
                 "gas-cloud",
                 "truly-empty",
               ].map((object) => {
