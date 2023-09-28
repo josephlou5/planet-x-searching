@@ -95,7 +95,7 @@ const MODE_SETTINGS = {
       },
       {
         object: "truly-empty",
-        count: 2,
+        count: 5,
         label: "Truly Empty Sectors",
         rule: "(remember: <planet-x> appears empty)",
       },
@@ -703,7 +703,12 @@ function startGame(gameSettings) {
           $("<div>", { class: "row gx-2" }).append(
             $("<div>", { class: "col-auto col-form-label" }).text("Planet X &"),
             $("<div>", { class: "col-auto" }).append(
-              BootstrapHtml.dropdown(topicOptions, { onlyLabels: true })
+                BootstrapHtml.dropdown(topicOptions, {
+                // let the user go back to a blank on the second one, since that
+                // is how conferences about Planet X & Truly Empty sectors are labeled
+                disableDefault: false,
+                onlyLabels: true,
+              })
             )
           )
         ),
